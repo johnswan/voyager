@@ -20,6 +20,7 @@ const (
 	RestartHAProxy                        // secret changes, ports unchanged
 	UpdateFirewall                        // ports changed
 	UpdateStats                           // Update things for stats update
+	UpdateRBAC                            // Update RBAC Roles as stats secret name is changes
 )
 
 func (lbc *Controller) Update(t UpdateMode) error {
@@ -51,11 +52,15 @@ func (lbc *Controller) Update(t UpdateMode) error {
 	}
 
 	if t&UpdateStats > 0 {
-		if lbc.Parsed.Stats {
+		if lbc.Ingress.Stats() {
 			lbc.ensureStatsService()
 		} else {
 			lbc.ensureStatsServiceDeleted()
 		}
+	}
+
+	if t&UpdateRBAC > 0 {
+		lbc.ensureRoles()
 	}
 
 	return nil
